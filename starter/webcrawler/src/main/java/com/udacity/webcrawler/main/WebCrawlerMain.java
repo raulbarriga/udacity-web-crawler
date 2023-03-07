@@ -11,6 +11,7 @@ import com.udacity.webcrawler.profiler.Profiler;
 import com.udacity.webcrawler.profiler.ProfilerModule;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Path;
@@ -30,7 +31,7 @@ public final class WebCrawlerMain {
   @Inject
   private Profiler profiler;
 
-  private void run() throws Exception {
+  private void run() throws IOException {
     Guice.createInjector(new WebCrawlerModule(config), new ProfilerModule()).injectMembers(this);
 
     CrawlResult result = crawler.crawl(config.getStartPages());
@@ -45,10 +46,15 @@ public final class WebCrawlerMain {
       // the results should be printed to standard output (also known as System.out).
       Writer writer = new OutputStreamWriter(System.out);
       resultWriter.write(writer);
-      //writer.flush();
     }
     // TODO: Write the profile data to a text file (or System.out if the file name is empty)
-
+    if (config.getProfileOutputPath().isEmpty()) {
+      System.out.println("\nOutput path empty\n");
+      profiler.writeData(new OutputStreamWriter(System.out));
+    } else {
+      Path path = Path.of(config.getProfileOutputPath());
+      profiler.writeData(path);
+    }
   }
 
   public static void main(String[] args) throws Exception {
