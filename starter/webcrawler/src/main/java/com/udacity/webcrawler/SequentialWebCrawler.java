@@ -35,13 +35,13 @@ final class SequentialWebCrawler implements WebCrawler {
       @PopularWordCount int popularWordCount,
       @MaxDepth int maxDepth,
       @IgnoredUrls List<Pattern> ignoredUrls) {
-    this.clock = clock;
-    this.parserFactory = parserFactory;
-    this.timeout = timeout;
-    this.popularWordCount = popularWordCount;
-    this.maxDepth = maxDepth;
-    this.ignoredUrls = ignoredUrls;
-  }
+        this.clock = clock;
+        this.parserFactory = parserFactory;
+        this.timeout = timeout;
+        this.popularWordCount = popularWordCount;
+        this.maxDepth = maxDepth;
+        this.ignoredUrls = ignoredUrls;
+      }
 
   @Override
   public CrawlResult crawl(List<String> startingUrls) {
@@ -74,16 +74,20 @@ final class SequentialWebCrawler implements WebCrawler {
     if (maxDepth == 0 || clock.instant().isAfter(deadline)) {
       return;
     }
+
     for (Pattern pattern : ignoredUrls) {
       if (pattern.matcher(url).matches()) {
         return;
       }
     }
+
     if (visitedUrls.contains(url)) {
       return;
     }
     visitedUrls.add(url);
+
     PageParser.Result result = parserFactory.get(url).parse();
+
     for (Map.Entry<String, Integer> e : result.getWordCounts().entrySet()) {
       if (counts.containsKey(e.getKey())) {
         counts.put(e.getKey(), e.getValue() + counts.get(e.getKey()));
@@ -91,6 +95,7 @@ final class SequentialWebCrawler implements WebCrawler {
         counts.put(e.getKey(), e.getValue());
       }
     }
+
     for (String link : result.getLinks()) {
       crawlInternal(link, deadline, maxDepth - 1, counts, visitedUrls);
     }

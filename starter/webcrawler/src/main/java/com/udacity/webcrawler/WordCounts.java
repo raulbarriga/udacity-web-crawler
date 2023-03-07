@@ -3,7 +3,7 @@ package com.udacity.webcrawler;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.stream.Collectors;
 
 /**
  * Utility class that sorts the map of word counts.
@@ -26,9 +26,8 @@ final class WordCounts {
    * @return a map containing the top {@param popularWordCount} words and counts in the right order.
    */
   static Map<String, Integer> sort(Map<String, Integer> wordCounts, int popularWordCount) {
-
     // TODO: Reimplement this method using only the Stream API and lambdas and/or method references.
-
+  /* previous implementation:
     PriorityQueue<Map.Entry<String, Integer>> sortedCounts =
         new PriorityQueue<>(wordCounts.size(), new WordCountComparator());
     sortedCounts.addAll(wordCounts.entrySet());
@@ -38,6 +37,19 @@ final class WordCounts {
       topCounts.put(entry.getKey(), entry.getValue());
     }
     return topCounts;
+   */
+    // using functional programming
+    return wordCounts
+            .entrySet()
+            .stream()
+            .sorted(new WordCountComparator())
+            .limit(popularWordCount)
+            .collect(Collectors
+                    .toMap(Map.
+                            Entry::getKey,
+                            Map.Entry::getValue,
+                            (a, b) -> a,
+                            LinkedHashMap::new));
   }
 
   /**
