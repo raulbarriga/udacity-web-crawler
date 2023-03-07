@@ -1,8 +1,8 @@
 package com.udacity.webcrawler.json;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -28,22 +28,18 @@ public final class ConfigurationLoader {
    *
    * @return the loaded {@link CrawlerConfiguration}.
    */
-  public CrawlerConfiguration load() {
+  public CrawlerConfiguration load() throws IOException {
     // TODO: Fill in this method.
-    try (BufferedReader bufferedReader = Files.newBufferedReader(path)) {
-      return read(bufferedReader);
+    Reader reader = null;
+    try {
+      reader = Files.newBufferedReader(path);
+      return read(reader);
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
+    } finally {
+      assert reader != null;
+      reader.close();
     }
-    return new CrawlerConfiguration.Builder().build();
-    //try (Reader reader = Files.newBufferedReader(path)) {
-    //  ObjectMapper objectMapper = new ObjectMapper();
-    //  CrawlerConfiguration crawlerConfiguration = objectMapper.readValue(reader, CrawlerConfiguration.class);
-    //  return crawlerConfiguration;
-    //} catch (Exception e) {
-    //  e.printStackTrace();
-    //  return null;
-    //}
   }
 
   /**
@@ -59,12 +55,13 @@ public final class ConfigurationLoader {
     // TODO: Fill in this method
     // this method needs to: read the JSON input and parse it into a
     // `CrawlerConfiguration` using the Jackson JSON library.
-    ObjectMapper objectMapper = new ObjectMapper();
-    //objectMapper.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+
     try {
-      return objectMapper.readValue(reader, CrawlerConfiguration.Builder.class).build();
+      return mapper.readValue(reader, CrawlerConfiguration.Builder.class).build();
     } catch (IOException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 }
