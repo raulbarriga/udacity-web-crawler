@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -32,40 +32,33 @@ final class ProfilingMethodInterceptor implements InvocationHandler {
     //       invoke the method using the object that is being profiled. Finally, for profiled
     //       methods, the interceptor should record how long the method call took, using the
     //       ProfilingState methods.
-
+    Object result;
+    Instant startTime = null;
+    boolean profiled = method.getAnnotation(Profiled.class) != null;
     // inspect the called method to see if it is a profiled method
-    if (method.getAnnotation(Profiled.class) != null) {
-      // For profiled methods, the interceptor should record the start time
-      ZonedDateTime startTime = clock.instant().atZone(clock.getZone());
-      Throwable thrownException = null;
 
+    if (profiled) {
+      // For profiled methods, the interceptor should record the start time
+      startTime = clock.instant();
+    }
       try {
         // invoke the method using the object that is being profiled
-        Object result = method.invoke(target, args);
         // for profiled methods, the interceptor should record how long the method call took,
         // using the ProfilingState methods
-        ZonedDateTime endTime = clock.instant().atZone(clock.getZone());
-        Duration duration = Duration.between(startTime, endTime);
-        state.record(target.getClass(), method, duration);
-
-        return result;
+        result = method.invoke(target, args);
       } catch (InvocationTargetException e) {
-        thrownException = e.getCause();
-        throw thrownException;
+          throw e.getTargetException();
       } catch (Throwable t) {
-        thrownException = t;
-        throw new RuntimeException(t);
+          throw new RuntimeException(t);
       } finally {
         // even if it throws an exception, any @Profiled method should still have
         // its running time recorded
-        if (thrownException != null) {
-          ZonedDateTime endTime = clock.instant().atZone(clock.getZone());
-          Duration duration = Duration.between(startTime, endTime);
+        if(profiled) {
+          Duration duration = Duration.between(startTime, clock.instant());
           state.record(target.getClass(), method, duration);
         }
       }
-    } else {
-      return method.invoke(target, args);
-    }
+
+    return result;
   }
 }

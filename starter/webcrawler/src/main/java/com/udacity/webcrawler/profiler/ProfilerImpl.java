@@ -51,14 +51,16 @@ final class ProfilerImpl implements Profiler {
     }
 
     ProfilingMethodInterceptor interceptor = new ProfilingMethodInterceptor(clock, delegate, state);
-    @SuppressWarnings("unchecked")
-    T wrappedDelegate = (T) Proxy.newProxyInstance(
+
+    Object wrappedDelegate = Proxy.newProxyInstance(
             klass.getClassLoader(),
             new Class[]{klass},
             interceptor
     );
 
-    return wrappedDelegate;
+    @SuppressWarnings("unchecked")
+    T result = (T) wrappedDelegate;
+    return result;
   }
 
   @Override

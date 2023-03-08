@@ -105,17 +105,19 @@ final class ParallelWebCrawler implements WebCrawler {
         }
       }
 
-      if (visitedUrls.contains(url)) {
+      // an atomic / thread safe technique to add URLs to the set
+      if (!visitedUrls.add(url)) {
         return;
       }
-      visitedUrls.add(url);
 
       PageParser.Result result = parserFactory.get(url).parse();
-      for (Map.Entry<String, Integer> e : result.getWordCounts().entrySet()) {
-        if (counts.containsKey(e.getKey())) {
-          counts.put(e.getKey(), e.getValue() + counts.get(e.getKey()));
-        } else {
-          counts.put(e.getKey(), e.getValue());
+      synchronized (counts) {
+        for (Map.Entry<String, Integer> e : result.getWordCounts().entrySet()) {
+          if (counts.containsKey(e.getKey())) {
+            counts.put(e.getKey(), e.getValue() + counts.get(e.getKey()));
+          } else {
+            counts.put(e.getKey(), e.getValue());
+          }
         }
       }
 
