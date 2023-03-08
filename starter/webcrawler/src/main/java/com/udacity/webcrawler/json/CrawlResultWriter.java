@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
 /**
@@ -35,7 +36,10 @@ public final class CrawlResultWriter {
     // This is here to get rid of the unused variable warning.
     Objects.requireNonNull(path);
     // TODO: Fill in this method.
-    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path)) {
+    // create the output file if it does not exist.
+    // If it already exists, it will be truncated & the new data will be
+    // written to it.
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path, StandardOpenOption.CREATE)) {
       write(bufferedWriter);
     } catch (IOException e) {
       e.printStackTrace();

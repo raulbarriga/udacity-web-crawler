@@ -11,9 +11,11 @@ import com.udacity.webcrawler.profiler.Profiler;
 import com.udacity.webcrawler.profiler.ProfilerModule;
 
 import javax.inject.Inject;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -44,16 +46,27 @@ public final class WebCrawlerMain {
     } else {
       // if the value of config.getResultPath() is empty,
       // the results should be printed to standard output (also known as System.out).
-      Writer writer = new OutputStreamWriter(System.out);
-      resultWriter.write(writer);
+      try (Writer writer = new OutputStreamWriter(System.out)) {
+        resultWriter.write(writer);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
     // TODO: Write the profile data to a text file (or System.out if the file name is empty)
     if (config.getProfileOutputPath().isEmpty()) {
       System.out.println("\nOutput path empty\n");
-      profiler.writeData(new OutputStreamWriter(System.out));
+      try (Writer writer = new OutputStreamWriter(System.out)) {
+        profiler.writeData(writer);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     } else {
       Path path = Path.of(config.getProfileOutputPath());
-      profiler.writeData(path);
+      try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path)) {
+        profiler.writeData(bufferedWriter);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
