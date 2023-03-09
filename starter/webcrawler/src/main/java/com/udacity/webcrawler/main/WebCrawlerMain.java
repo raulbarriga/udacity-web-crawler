@@ -35,38 +35,27 @@ public final class WebCrawlerMain {
 
   private void run() throws IOException {
     Guice.createInjector(new WebCrawlerModule(config), new ProfilerModule()).injectMembers(this);
-
     CrawlResult result = crawler.crawl(config.getStartPages());
     CrawlResultWriter resultWriter = new CrawlResultWriter(result);
-    // TODO: Write the crawl results to a JSON file (or System.out if the file name is empty)
-    String resultPath = config.getResultPath();
-    if (!resultPath.isEmpty()) {
-      // If it's a non-empty string
-      resultWriter.write(Path.of(resultPath));
-    } else {
-      // if the value of config.getResultPath() is empty,
-      // the results should be printed to standard output (also known as System.out).
-      try (Writer writer = new OutputStreamWriter(System.out)) {
+    try (Writer writer = new OutputStreamWriter(System.out)) {
+      String resultPath = config.getResultPath();
+      if (!resultPath.isEmpty()) {
+        resultWriter.write(Path.of(resultPath));
+      } else {
         resultWriter.write(writer);
-      } catch (IOException e) {
-        e.printStackTrace();
       }
-    }
-    // TODO: Write the profile data to a text file (or System.out if the file name is empty)
-    if (config.getProfileOutputPath().isEmpty()) {
-      System.out.println("\nOutput path empty\n");
-      try (Writer writer = new OutputStreamWriter(System.out)) {
+      if (config.getProfileOutputPath().isEmpty()) {
         profiler.writeData(writer);
-      } catch (IOException e) {
-        e.printStackTrace();
+      } else {
+        Path path = Path.of(config.getProfileOutputPath());
+        try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path)) {
+          profiler.writeData(bufferedWriter);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
-    } else {
-      Path path = Path.of(config.getProfileOutputPath());
-      try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path)) {
-        profiler.writeData(bufferedWriter);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
